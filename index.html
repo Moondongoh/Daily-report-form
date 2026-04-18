@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans, system-ui); background: var(--color-background-tertiary, #f5f5f0); min-height: 100vh; }
+.app { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; }
+.header { margin-bottom: 1.5rem; }
+.header h1 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+.header p { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; border-bottom: 1.5px solid var(--color-border-secondary); }
+.tab { padding: 8px 16px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; color: var(--color-text-secondary); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+.tab.active { color: var(--color-text-primary); border-bottom-color: var(--color-text-primary); }
+.tab:hover:not(.active) { color: var(--color-text-primary); }
+.panel { display: none; }
+.panel.active { display: block; }
+.card { background: var(--color-background-primary); border: 1px solid var(--color-border-secondary); border-radius: var(--border-radius-lg, 12px); padding: 1.25rem; margin-bottom: 1rem; }
+.section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border-secondary); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 12px; color: var(--color-text-secondary); }
+.field input, .field textarea, .field select { padding: 7px 10px; font-size: 13px; border: 1px solid var(--color-border-secondary); border-radius: var(--border-radius-md, 8px); background: var(--color-background-secondary); color: var(--color-text-primary); width: 100%; resize: vertical; font-family: inherit; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--color-border-primary); box-shadow: 0 0 0 2px rgba(0,0,0,0.06); }
+.field textarea { min-height: 72px; }
+.day-nav { display: flex; gap: 4px; margin-bottom: 1rem; }
+.day-btn { flex: 1; padding: 7px 4px; font-size: 12px; font-weight: 500; border: 1px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: none; cursor: pointer; color: var(--color-text-secondary); transition: all 0.15s; text-align: center; }
+.day-btn.active { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
+.day-btn.has-data { border-color: var(--color-border-primary); color: var(--color-text-primary); }
+.day-btn:hover:not(.active) { background: var(--color-background-secondary); }
+.subsection { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-border-secondary); }
+.subsection:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.subsection-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 8px; }
+.badge { font-size: 10px; padding: 2px 7px; border-radius: 99px; font-weight: 500; }
+.badge-lab { background: #E6F1FB; color: #0C447C; }
+.badge-home { background: #EAF3DE; color: #27500A; }
+.btn { padding: 8px 16px; font-size: 13px; font-weight: 500; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: none; cursor: pointer; color: var(--color-text-primary); transition: all 0.15s; }
+.btn:hover { background: var(--color-background-secondary); }
+.btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: transparent; }
+.btn-primary:hover { opacity: 0.88; background: var(--color-text-primary); }
+.weekly-days { display: grid; grid-template-columns: 120px 1fr; gap: 0; border-top: 1px solid var(--color-border-secondary); }
+.weekly-day-label { font-size: 12px; color: var(--color-text-secondary); padding: 8px 12px 8px 0; border-bottom: 1px solid var(--color-border-secondary); display: flex; align-items: center; font-weight: 500; }
+.weekly-day-input { padding: 6px 0; border-bottom: 1px solid var(--color-border-secondary); }
+.weekly-day-input input { border: none; border-radius: 0; background: none; padding: 2px 0; font-size: 13px; }
+.weekly-day-input input:focus { outline: none; box-shadow: none; border-bottom: 1.5px solid var(--color-text-primary); }
+.tomorrow-box { background: #FAEEDA; border: 0.5px solid #FAC775; border-radius: var(--border-radius-md); padding: 10px 12px; margin-top: 8px; }
+.tomorrow-box label { color: #633806; font-size: 11px; font-weight: 500; }
+.tomorrow-box textarea { background: rgba(255,255,255,0.6); border-color: #FAC775; min-height: 56px; font-size: 12px; }
+.progress-bar-wrap { display: flex; gap: 3px; margin-bottom: 1rem; }
+.progress-seg { height: 3px; flex: 1; border-radius: 2px; background: var(--color-border-tertiary); transition: background 0.2s; }
+.progress-seg.done { background: #1D9E75; }
+.export-section { background: var(--color-background-secondary); border: 1px solid var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 1.25rem; }
+.hint-box { font-size: 11px; color: #0C447C; background: #E6F1FB; border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; }
+.spinner { display: none; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; margin-left: 6px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Weekly / Daily Report</h1>
+    <p id="week-label">이번 주 보고서를 작성하세요</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('weekly',this)">주간 일정</button>
+    <button class="tab" onclick="switchTab('daily',this)">일일 보고서</button>
+    <button class="tab" onclick="switchTab('export',this)">내보내기</button>
+  </div>
+
+  <div id="panel-weekly" class="panel active">
+    <div class="card">
+      <div class="section-label">기본 정보</div>
+      <div class="grid-2" style="margin-bottom:1rem;">
+        <div class="field"><label>기간 (Period)</label><input type="text" id="w-period" placeholder="예: April 13 ~ April 17" oninput="save()"></div>
+        <div class="field"><label>목표 (Goal)</label><input type="text" id="w-goal" placeholder="이번 주 목표" oninput="save()"></div>
+      </div>
+      <div class="section-label">요일별 계획</div>
+      <div class="weekly-days" id="weekly-days-grid"></div>
+    </div>
+    <div class="card">
+      <div class="section-label">기타</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="field"><label>우선순위 (Priority)</label><textarea id="w-priority" placeholder="이번 주 우선순위 항목" oninput="save()"></textarea></div>
+        <div class="grid-2">
+          <div class="field"><label>전주 잔여 업무 (Carry-over)</label><textarea id="w-carryover" placeholder="-" oninput="save()" style="min-height:56px;"></textarea></div>
+          <div class="field"><label>질문 (Question)</label><textarea id="w-question" placeholder="-" oninput="save()" style="min-height:56px;"></textarea></div>
+        </div>
+        <div class="field"><label>다음주 예정 업무 (Remaining work scheduled)</label><textarea id="w-remaining" placeholder="-" oninput="save()"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-daily" class="panel">
+    <div class="day-nav" id="day-nav"></div>
+    <div class="progress-bar-wrap" id="progress-bar"></div>
+    <div id="daily-content"></div>
+  </div>
+
+  <div id="panel-export" class="panel">
+    <div class="card">
+      <div class="section-label">작성 현황</div>
+      <div id="summary-grid" class="grid-3" style="margin-bottom:1.25rem;"></div>
+      <div class="export-section">
+        <div style="font-size:14px;font-weight:500;margin-bottom:4px;">워드 파일 (.docx) 내보내기</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:1rem;">영문 양식 기준으로 원본과 동일한 테이블 구조의 .docx 파일을 생성합니다.</div>
+        <button class="btn btn-primary" id="export-btn" onclick="exportDocx()">
+          .docx 다운로드
+          <span class="spinner" id="spinner"></span>
+        </button>
+        <div id="export-msg" style="font-size:12px;color:var(--color-text-secondary);margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+<script>
+const DAYS_EN = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const DAYS_KO = ['월요일','화요일','수요일','목요일','금요일'];
+const DAYS_SHORT = ['월','화','수','목','금'];
+let currentDay = 0;
+
+let data = JSON.parse(localStorage.getItem('report_data_v2') || 'null') || {
+  weekly: { period:'', goal:'', days:['','','','',''], priority:'', carryover:'-', question:'-', remaining:'-' },
+  daily: Array.from({length:5}, () => ({ goal:'', lab:'', home:'', tomorrow:'' }))
+};
+
+function save() {
+  data.weekly.period = g('w-period');
+  data.weekly.goal = g('w-goal');
+  data.weekly.days = DAYS_EN.map((_,i) => g('w-day-'+i));
+  data.weekly.priority = g('w-priority');
+  data.weekly.carryover = g('w-carryover') || '-';
+  data.weekly.question = g('w-question') || '-';
+  data.weekly.remaining = g('w-remaining') || '-';
+  data.daily[currentDay].goal = g('d-goal');
+  data.daily[currentDay].lab = g('d-lab');
+  data.daily[currentDay].home = g('d-home');
+  data.daily[currentDay].tomorrow = g('d-tomorrow');
+  localStorage.setItem('report_data_v2', JSON.stringify(data));
+  updateDayNav();
+  updateSummary();
+}
+
+function g(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function s(id, val) { const el = document.getElementById(id); if(el) el.value = val || ''; }
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if(tab === 'export') updateSummary();
+}
+
+function buildWeeklyGrid() {
+  document.getElementById('weekly-days-grid').innerHTML = DAYS_EN.map((day,i) => `
+    <div class="weekly-day-label">${DAYS_KO[i]} <span style="color:var(--color-text-tertiary);font-size:11px;margin-left:4px;">${day}</span></div>
+    <div class="weekly-day-input"><input type="text" id="w-day-${i}" placeholder="오늘 할 일" oninput="save()"></div>
+  `).join('');
+}
+
+function hasDailyData(i) { const d = data.daily[i]; return d && (d.goal || d.lab || d.home); }
+
+function updateDayNav() {
+  DAYS_EN.forEach((_,i) => {
+    const b = document.getElementById('day-btn-'+i);
+    if(b) b.className = `day-btn ${i===currentDay?'active':''} ${hasDailyData(i)?'has-data':''}`;
+    const p = document.getElementById('prog-'+i);
+    if(p) p.className = `progress-seg ${hasDailyData(i)?'done':''}`;
+  });
+}
+
+function buildDayNav() {
+  document.getElementById('day-nav').innerHTML = DAYS_EN.map((d,i) => `
+    <button class="day-btn ${i===currentDay?'active':''} ${hasDailyData(i)?'has-data':''}" onclick="switchDay(${i})" id="day-btn-${i}">
+      <div>${DAYS_SHORT[i]}</div>
+      <div style="font-size:10px;font-weight:400;margin-top:1px;">${d.slice(0,3)}</div>
+    </button>`).join('');
+  document.getElementById('progress-bar').innerHTML = [0,1,2,3,4].map(i =>
+    `<div class="progress-seg ${hasDailyData(i)?'done':''}" id="prog-${i}"></div>`).join('');
+}
+
+function switchDay(i) { save(); currentDay = i; buildDailyContent(); updateDayNav(); }
+
+function buildDailyContent() {
+  const d = data.daily[currentDay];
+  const prevTomorrow = currentDay > 0 ? data.daily[currentDay-1].tomorrow : '';
+  document.getElementById('daily-content').innerHTML = `
+    ${prevTomorrow ? `<div class="hint-box">어제 미리 적어둔 내용: ${prevTomorrow}</div>` : ''}
+    <div class="card">
+      <div style="font-size:16px;font-weight:500;margin-bottom:1rem;">${DAYS_KO[currentDay]} <span style="color:var(--color-text-secondary);font-size:13px;">${DAYS_EN[currentDay]}</span></div>
+      <div class="subsection">
+        <div class="subsection-title">목표 (Goal)</div>
+        <div class="field"><textarea id="d-goal" placeholder="오늘의 목표" oninput="save()">${d.goal||''}</textarea></div>
+      </div>
+      <div class="subsection">
+        <div class="subsection-title"><span class="badge badge-lab">연구실 Lab</span></div>
+        <div class="field"><textarea id="d-lab" placeholder="연구실에서 한 일" oninput="save()" style="min-height:88px;">${d.lab||''}</textarea></div>
+      </div>
+      <div class="subsection">
+        <div class="subsection-title"><span class="badge badge-home">집 Home</span></div>
+        <div class="field"><textarea id="d-home" placeholder="집에서 한 일" oninput="save()" style="min-height:72px;">${d.home||''}</textarea></div>
+      </div>
+      ${currentDay < 4 ? `
+      <div class="tomorrow-box">
+        <label>내일(${DAYS_KO[currentDay+1]}) 할 일 미리 적기</label>
+        <div class="field" style="margin-top:6px;"><textarea id="d-tomorrow" placeholder="내일 할 일을 미리 적어두면 다음날 상단에 표시돼요" oninput="save()">${d.tomorrow||''}</textarea></div>
+      </div>` : `<div style="font-size:12px;color:var(--color-text-secondary);padding-top:8px;">금요일이에요! 내보내기 탭에서 .docx 파일을 저장하세요.</div>`}
+    </div>`;
+}
+
+function updateSummary() {
+  const el = document.getElementById('summary-grid');
+  if(!el) return;
+  const wf = [data.weekly.period, data.weekly.goal, ...data.weekly.days].filter(Boolean).length;
+  const df = data.daily.filter(d => d.goal || d.lab).length;
+  el.innerHTML = `
+    <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px;">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">주간 작성</div>
+      <div style="font-size:22px;font-weight:500;">${wf}<span style="font-size:13px;color:var(--color-text-secondary);font-weight:400;"> / 7</span></div>
+    </div>
+    <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px;">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">일일 보고서</div>
+      <div style="font-size:22px;font-weight:500;">${df}<span style="font-size:13px;color:var(--color-text-secondary);font-weight:400;"> / 5</span></div>
+    </div>
+    <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px;">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">완성도</div>
+      <div style="font-size:22px;font-weight:500;">${Math.round((wf + df*2)/17*100)}<span style="font-size:13px;color:var(--color-text-secondary);font-weight:400;">%</span></div>
+    </div>`;
+}
+
+async function exportDocx() {
+  const btn = document.getElementById('export-btn');
+  const spinner = document.getElementById('spinner');
+  const msg = document.getElementById('export-msg');
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+  msg.textContent = '파일 생성 중...';
+
+  try {
+    const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+            AlignmentType, BorderStyle, WidthType, ShadingType, VerticalAlign, PageBreak } = docx;
+
+    const W = data.weekly;
+    const FONT = 'Gulim';
+    const sz = 20;
+    const szTitle = 40;
+    const szDayTitle = 32;
+
+    const bdr = (sz) => ({ style: BorderStyle.SINGLE, size: sz, color: '000000' });
+    const thickBdr = bdr(18);
+    const thinBdr = bdr(2);
+
+    const cell = (text, opts = {}) => {
+      const { colSpan=1, width=5000, bold=false, fontSize=sz, shade=null, borders=null, vAlign=VerticalAlign.CENTER, align=AlignmentType.CENTER, hideMark=false } = opts;
+      const defaultBorders = { top: thinBdr, bottom: thinBdr, left: thinBdr, right: thinBdr };
+      return new TableCell({
+        columnSpan: colSpan,
+        width: { size: width, type: WidthType.DXA },
+        verticalAlign: vAlign,
+        shading: shade ? { fill: shade, type: ShadingType.CLEAR } : undefined,
+        borders: borders || defaultBorders,
+        margins: { top: 28, bottom: 28, left: 102, right: 102 },
+        children: [new Paragraph({
+          alignment: align,
+          spacing: { after: 0, line: 240, lineRule: 'auto' },
+          children: [new TextRun({ text, font: FONT, size: fontSize, bold, color: '000000' })]
+        })],
+        ...(hideMark ? {} : {})
+      });
+    };
+
+    const multiLineCell = (lines, opts = {}) => {
+      const { colSpan=1, width=10420, borders=null, vAlign=VerticalAlign.TOP, align=AlignmentType.LEFT } = opts;
+      return new TableCell({
+        columnSpan: colSpan,
+        width: { size: width, type: WidthType.DXA },
+        verticalAlign: vAlign,
+        borders: borders || { top: thinBdr, bottom: thickBdr, left: thickBdr, right: thickBdr },
+        margins: { top: 102, bottom: 102, left: 102, right: 102 },
+        children: lines.map(line => new Paragraph({
+          alignment: align,
+          spacing: { after: 0, line: 240, lineRule: 'auto' },
+          children: [new TextRun({ text: line, font: FONT, size: sz, color: '000000' })]
+        }))
+      });
+    };
+
+    const thickLeft = { top: thinBdr, bottom: thinBdr, left: thickBdr, right: thinBdr };
+    const thickLeftBottom = { top: thinBdr, bottom: thickBdr, left: thickBdr, right: thinBdr };
+    const thickRight = { top: thinBdr, bottom: thinBdr, left: thinBdr, right: thickBdr };
+    const thickRightBottom = { top: thinBdr, bottom: thickBdr, left: thinBdr, right: thickBdr };
+    const allThick = { top: thickBdr, bottom: thickBdr, left: thickBdr, right: thickBdr };
+
+    const labelCell = (text, width=3327) => cell(text, { width, borders: { top: thinBdr, bottom: thinBdr, left: thickBdr, right: thinBdr } });
+    const contentCell = (text, width=7093) => cell(text, { width, borders: { top: thinBdr, bottom: thinBdr, left: thinBdr, right: thickBdr }, align: AlignmentType.LEFT });
+
+    const makeWeeklyTable = () => new Table({
+      width: { size: 10420, type: WidthType.DXA },
+      rows: [
+        new TableRow({ height: { value: 545 }, children: [
+          cell('Weekly Report', { colSpan:18, width:10420, bold:true, fontSize:szTitle, shade:'E5E5E5', borders: allThick, align: AlignmentType.CENTER })
+        ]}),
+        new TableRow({ height: { value: 256 }, children: [
+          cell('Period', { colSpan:5, width:3327, borders: thickLeft }),
+          cell(W.period||'', { colSpan:7, width:3877, borders: { top:thinBdr, bottom:thinBdr, left:thinBdr, right:thinBdr } }),
+          cell('Name', { colSpan:3, width:2470, borders: { top:thinBdr, bottom:thinBdr, left:thinBdr, right:thinBdr } }),
+          cell('Dong oh Moon', { colSpan:3, width:1746, borders: thickRight })
+        ]}),
+        new TableRow({ height: { value: 289 }, children: [
+          cell('', { colSpan:5, width:3327, borders: thickLeft }),
+          cell('Goal: '+(W.goal||''), { colSpan:13, width:7093, borders: thickRight, align: AlignmentType.LEFT })
+        ]}),
+        ...DAYS_EN.map((day, i) => new TableRow({ height: { value: 538 }, children: [
+          cell(day, { colSpan:5, width:3327, borders: thickLeft }),
+          contentCell(W.days[i]||'')
+        ]})),
+        new TableRow({ height: { value: 3472 }, children: [
+          cell('Priority', { colSpan:5, width:3327, borders: thickLeft }),
+          new TableCell({ columnSpan:13, width:{ size:7093, type:WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
+            borders: thickRight, margins: { top:28, bottom:28, left:102, right:102 },
+            children: (W.priority||'').split('\n').map(l => new Paragraph({ alignment: AlignmentType.LEFT, spacing:{after:0,line:240,lineRule:'auto'}, children:[new TextRun({text:l,font:FONT,size:sz,color:'000000'})] }))
+          })
+        ]}),
+        new TableRow({ height: { value: 800 }, children: [
+          cell('Carry-over from Last Week', { colSpan:5, width:3327, borders: thickLeft }),
+          contentCell(W.carryover||'-')
+        ]}),
+        new TableRow({ height: { value: 800 }, children: [
+          cell('Question', { colSpan:5, width:3327, borders: thickLeft }),
+          contentCell(W.question||'-')
+        ]}),
+        new TableRow({ height: { value: 1022 }, children: [
+          cell('Remaining work scheduled', { colSpan:5, width:3327, borders: thickLeftBottom }),
+          contentCell(W.remaining||'-')
+        ]}),
+      ]
+    });
+
+    const makeDailyTable = (dayIdx, withPageBreak=false) => {
+      const d = data.daily[dayIdx];
+      const labLines = ['[Lab]', ...(d.lab||'').split('\n').filter(Boolean)];
+      const homeLines = ['========================================', '[Home]', ...(d.home||'').split('\n').filter(Boolean)];
+      const contentLines = [...labLines, ...homeLines];
+
+      return new Table({
+        width: { size: 10420, type: WidthType.DXA },
+        rows: [
+          new TableRow({ height: { value: 545 }, children: [
+            new TableCell({ columnSpan:18, width:{size:10420,type:WidthType.DXA}, verticalAlign:VerticalAlign.CENTER,
+              shading:{fill:'E5E5E5',type:ShadingType.CLEAR}, borders:allThick, margins:{top:28,bottom:28,left:102,right:102},
+              children:[new Paragraph({ alignment:AlignmentType.CENTER, spacing:{after:0}, children:[
+                ...(withPageBreak ? [new PageBreak()] : []),
+                new TextRun({text:'Daily Report', font:FONT, size:szDayTitle, bold:true, color:'000000'})
+              ]})]
+            })
+          ]}),
+          new TableRow({ height:{value:545}, children:[
+            cell('Date', {colSpan:6, width:3628, borders:{top:thickBdr,bottom:thinBdr,left:thickBdr,right:thinBdr}}),
+            cell(DAYS_EN[dayIdx], {colSpan:5, width:1972, borders:{top:thickBdr,bottom:thinBdr,left:thinBdr,right:thinBdr}}),
+            cell('Name', {colSpan:3, width:2470, borders:{top:thickBdr,bottom:thinBdr,left:thinBdr,right:thinBdr}}),
+            cell('Dong oh Moon', {colSpan:4, width:2350, borders:{top:thickBdr,bottom:thinBdr,left:thinBdr,right:thickBdr}})
+          ]}),
+          new TableRow({ height:{value:545}, children:[
+            cell('Goal', {colSpan:6, width:3628, borders:{top:thinBdr,bottom:thinBdr,left:thickBdr,right:thinBdr}}),
+            cell(d.goal||'', {colSpan:12, width:6792, borders:{top:thinBdr,bottom:thinBdr,left:thinBdr,right:thickBdr}, align:AlignmentType.LEFT})
+          ]}),
+          new TableRow({ height:{value:495}, children:[
+            cell('Contents', {colSpan:18, width:10420, borders:{top:thinBdr,bottom:thinBdr,left:thickBdr,right:thickBdr}})
+          ]}),
+          new TableRow({ height:{value:12310}, children:[
+            multiLineCell(contentLines, {colSpan:18, width:10420})
+          ]}),
+        ]
+      });
+    };
+
+    const children = [
+      makeWeeklyTable(),
+      new Paragraph({ spacing:{after:0}, children:[new TextRun({text:'',size:6})] }),
+      makeDailyTable(0, true),
+      makeDailyTable(1, true),
+      makeDailyTable(2, true),
+      makeDailyTable(3, true),
+      makeDailyTable(4, true),
+    ];
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: { size:{width:11906,height:16838}, margin:{top:720,right:720,bottom:720,left:720} }
+        },
+        children
+      }]
+    });
+
+    const buffer = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(buffer);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Weekly_Report_${(W.period||'this_week').replace(/\s/g,'_')}.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    msg.textContent = '다운로드 완료!';
+  } catch(e) {
+    msg.textContent = '오류: ' + e.message;
+    console.error(e);
+  }
+  btn.disabled = false;
+  spinner.style.display = 'none';
+}
+
+function init() {
+  buildWeeklyGrid();
+  s('w-period', data.weekly.period);
+  s('w-goal', data.weekly.goal);
+  data.weekly.days.forEach((v,i) => s('w-day-'+i, v));
+  s('w-priority', data.weekly.priority);
+  s('w-carryover', data.weekly.carryover);
+  s('w-question', data.weekly.question);
+  s('w-remaining', data.weekly.remaining);
+  buildDayNav();
+  buildDailyContent();
+  updateSummary();
+  if(data.weekly.period) document.getElementById('week-label').textContent = data.weekly.period + ' 보고서';
+}
+
+init();
+</script>
+</body>
+</html>
